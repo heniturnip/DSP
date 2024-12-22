@@ -191,3 +191,35 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # 9. Visualisasi menggunakan Matplotlib
+    fig, ax = plt.subplots(3, 1, figsize=(20, 10))
+    
+    # Plot sinyal RGB
+    ax[0].plot(r_signal, color='red')
+    ax[0].set_title('Red Signal')
+    ax[1].plot(g_signal, color='green')
+    ax[1].set_title('Green Signal')
+    ax[2].plot(b_signal, color='blue')
+    ax[2].set_title('Blue Signal')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Plot sinyal rPPG sebelum dan sesudah penyaringan
+    fig, ax = plt.subplots(2, 1, figsize=(20, 6))
+    ax[0].plot(rppg_signal, color='black')
+    ax[0].set_title('rPPG Signal - Before Filtering')
+    ax[1].plot(filtered_rppg, color='black')
+    ax[1].set_title('rPPG Signal - After Filtering')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Plot sinyal rPPG dengan puncak
+    plt.figure(figsize=(20, 5))
+    plt.plot(filtered_rppg, color='black')
+    plt.plot(peaks, filtered_rppg[peaks], 'x', color='red')
+    plt.title(f'Heart Rate: {heart_rate:.2f}')
+    
+    plt.tight_layout()
+    plt.show()
