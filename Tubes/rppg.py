@@ -79,7 +79,7 @@ def calculate_respiratory_signal(rppg_signal, fps):
     Mengembalikan:
     - numpy.ndarray: Sinyal respirasi yang telah difilter.
     """
-    lowcut_respirasi = 0.1                      # Frekuensi cut-off bawah untuk respirasi
+    lowcut_respirasi = 0.2                      # Frekuensi cut-off bawah untuk respirasi
     highcut_respirasi = 0.5                     # Frekuensi cut-off atas untuk respirasi
     order = 3                                   # Orde filter Butterworth
     b_respirasi, a_respirasi = signal.butter(order, [lowcut_respirasi, highcut_respirasi], btype='band', fs=fps) # Koefisien filter
