@@ -3,7 +3,7 @@ import numpy as np
 import scipy.signal as signal
 
 def cpu_POS(input_signal, **kargs):
-    """
+  """
     Metode POS pada CPU menggunakan Numpy.
 
     Fungsi ini mengimplementasikan metode ekstraksi sinyal Photoplethysmography (PPG)
@@ -19,35 +19,36 @@ def cpu_POS(input_signal, **kargs):
     Mengembalikan:
     - numpy.ndarray: Array 2D dengan bentuk (e, f) yang berisi sinyal detak jantung yang diekstrak.
     """
-    eps = 10**-9
-    X = input_signal
-    e, c, f = X.shape            # e = #estimators, c = 3 rgb ch., f = #frames
-    w = int(1.6 * kargs['fps'])   # panjang jendela
 
-    P = np.array([[0, 1, -1], [-2, 1, 1]])
-    Q = np.stack([P for _ in range(e)], axis=0)
+  eps = 10**-9                                # Nilai kecil untuk menghindari pembagian dengan nol
+  X = input_signal
+  e, c, f = X.shape                           # Mendapatkan dimensi input: estimator, channel, frame
+  w = int(1.6 * kargs['fps'])                 # Menghitung panjang window berdasarkan fps
 
-    H = np.zeros((e, f))
-    for n in np.arange(w, f):
-        m = n - w + 1
-        Cn = X[:, :, m:(n + 1)]
-        M = 1.0 / (np.mean(Cn, axis=2) + eps)
-        M = np.expand_dims(M, axis=2)  # bentuk [e, c, w]
-        Cn = np.multiply(M, Cn)
+  P = np.array([[0, 1, -1], [-2, 1, 1]])      # Matriks proyeksi untuk transformasi warna
+  Q = np.stack([P for _ in range(e)], axis=0)  # Membuat tumpukan matriks P untuk setiap estimator
 
-        S = np.dot(Q, Cn)
-        S = S[0, :, :, :]
-        S = np.swapaxes(S, 0, 1)    # menghapus dimensi ke-3
+  H = np.zeros((e, f))                         # Inisialisasi array output
+  for n in np.arange(w, f):
+    m = n - w + 1
+    Cn = X[:, :, m:(n + 1)]                 # Mengambil window dari sinyal input
+    M = 1.0 / (np.mean(Cn, axis=2) + eps)   # Menghitung faktor normalisasi
+    M = np.expand_dims(M, axis=2)            # Menambah dimensi untuk broadcasting
+    Cn = np.multiply(M, Cn)                  # Normalisasi sinyal
 
-        S1 = S[:, 0, :]
-        S2 = S[:, 1, :]
-        alpha = np.std(S1, axis=1) / (eps + np.std(S2, axis=1))
-        alpha = np.expand_dims(alpha, axis=1)
-        Hn = np.add(S1, alpha * S2)
-        Hnm = Hn - np.expand_dims(np.mean(Hn, axis=1), axis=1)
-        H[:, m:(n + 1)] = np.add(H[:, m:(n + 1)], Hnm)
+    S = np.dot(Q, Cn)                       # Proyeksi sinyal ke ruang warna baru
+    S = S[0, :, :, :]
+    S = np.swapaxes(S, 0, 1)                # Menyesuaikan dimensi array
 
-    return H
+    S1 = S[:, 0, :]                         # Komponen pertama sinyal
+    S2 = S[:, 1, :]                         # Komponen kedua sinyal
+    alpha = np.std(S1, axis=1) / (eps + np.std(S2, axis=1))  # Menghitung rasio standar deviasi
+    alpha = np.expand_dims(alpha, axis=1)    # Menambah dimensi untuk broadcasting
+    Hn = np.add(S1, alpha * S2)             # Kombinasi komponen dengan bobot alpha
+    Hnm = Hn - np.expand_dims(np.mean(Hn, axis=1), axis=1)  # Menghilangkan mean
+    H[:, m:(n + 1)] = np.add(H[:, m:(n + 1)], Hnm)  # Menyimpan hasil ke array output
+
+  return H
 
 def filter_rppg(rppg_signal, fps):
     """
@@ -60,27 +61,27 @@ def filter_rppg(rppg_signal, fps):
     Mengembalikan:
     - numpy.ndarray: Sinyal rPPG yang telah difilter.
     """
-    lowcut = 0.9
-    highcut = 2.4
-    order = 3
-    b, a = signal.butter(order, [lowcut, highcut], btype='band', fs=fps)
-    filtered_rppg = signal.filtfilt(b, a, rppg_signal)
+    lowcut = 0.9                                   # Frekuensi cut-off bawah untuk filter
+    highcut = 2                              # Frekuensi cut-off atas untuk filter
+    order = 3                                   # Orde filter Butterworth
+    b, a = signal.butter(order, [lowcut, highcut], btype='band', fs=fps)  # Koefisien filter
+    filtered_rppg = signal.filtfilt(b, a, rppg_signal)  # Menerapkan filter
     return filtered_rppg
 
 def calculate_respiratory_signal(rppg_signal, fps):
     """
-    Menghitung sinyal pernapasan dari sinyal rPPG.
+    Menghitung sinyal respirasi dari sinyal rPPG.
 
     Parameter:
-    - rppg_signal (numpy.ndarray): Sinyal rPPG yang digunakan untuk menghitung sinyal pernapasan.
+    - rppg_signal (numpy.ndarray): Sinyal rPPG input.
     - fps (float): Frame per detik dari video input.
 
     Mengembalikan:
-    - numpy.ndarray: Sinyal pernapasan yang telah difilter.
+    - numpy.ndarray: Sinyal respirasi yang telah difilter.
     """
-    lowcut_respirasi = 0.1
-    highcut_respirasi = 0.3
-    order = 3
-    b_respirasi, a_respirasi = signal.butter(order, [lowcut_respirasi, highcut_respirasi], btype='band', fs=fps)
-    filtered_respirasi = signal.filtfilt(b_respirasi, a_respirasi, rppg_signal)
+    lowcut_respirasi = 0.1                      # Frekuensi cut-off bawah untuk respirasi
+    highcut_respirasi = 0.5                     # Frekuensi cut-off atas untuk respirasi
+    order = 3                                   # Orde filter Butterworth
+    b_respirasi, a_respirasi = signal.butter(order, [lowcut_respirasi, highcut_respirasi], btype='band', fs=fps) # Koefisien filter
+    filtered_respirasi = signal.filtfilt(b_respirasi, a_respirasi, rppg_signal)  # Menerapkan filter
     return filtered_respirasi
