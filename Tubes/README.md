@@ -1,3 +1,6 @@
+# Tugas Mata Kuliah Pengolahan Sinyal Digital (IF3024)
+Dosen Pengampu :  Martin Clinton Tosima Manullang S.T., M.T.
+
 ## Deskripsi Proyek
 Proyek ini mengembangkan sistem real-time yang menggabungkan pengukuran sinyal respirasi dan remote-photopletysmography (rPPG). Sistem ini menggunakan webcam untuk menangkap video dan memproses secara langsung untuk menghasilkan visualisasi sinyal respirasi dan rPPG. Implementasi menggunakan teknik pemrosesan sinyal digital untuk ekstraksi data vital secara non-invasif.
 
